@@ -3,7 +3,7 @@
 # FILENAME: indexing.py
 # SPECIFICATION: calculates the tf-idf to get the document-term matrix
 # FOR: CS 5180- Assignment #1
-# TIME SPENT: 
+# TIME SPENT: 1 day
 #-----------------------------------------------------------*/
 
 #Importing some Python libraries
@@ -61,7 +61,6 @@ for d in stemmed_docs:
 print("Terms in this collection: ", terms)
 
 #Building the document-term matrix by using the tf-idf weights.
-
 def tf(d):
     tf_dict = {}
     terms_count = len(d)
@@ -88,19 +87,24 @@ def idf(D):
         idf_dict[term] = math.log10(size_of_D/df_dict[term])
     return idf_dict
 
-def tf_idf(D):
-    tf_idf_dict = {}
+def compute_tf_idf_matrix(D):
+    matrix_row = []
     idf_dict = idf(D)
     for d in D:
+        matrix_col = []
         tf_dict = tf(d)
-        tf_idf_dict[d] = []
         for term in terms:
-            tf_idf_dict[d].append(tf_dict[term] * idf_dict[term])
-    return tf_idf_dict
+            tf_idf = tf_dict[term] * idf_dict[term]
+            matrix_col.append(round(tf_idf, 3))
+        matrix_row.append(matrix_col)
+    return matrix_row
 
-print(tf_idf(stemmed_docs))
-
-#docTermMatrix = []
+docTermMatrix = []
+docTermMatrix = compute_tf_idf_matrix(stemmed_docs)
 
 #Printing the document-term matrix.
 #--> add your Python code here
+
+print("\nDocument-term matrix:")
+for row in docTermMatrix:
+    print(row)
