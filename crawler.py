@@ -6,16 +6,11 @@ from urllib.request import urlopen
 from urllib.parse import urljoin
 from urllib.error import HTTPError
 from urllib.error import URLError
-from pymongo import MongoClient
 
-from db_mongo import *
+from CPPDatabase import *
 
 URL_SEED = 'https://www.cpp.edu/sci/computer-science/'
 BASE_URL = 'https://www.cpp.edu/'
-
-DB_NAME = "CPP"
-DB_HOST = "localhost"
-DB_PORT = 27017
 
 is_visited = {}
 
@@ -29,10 +24,12 @@ def extract_urls(html):
 
         if url not in is_visited:
             url_list.append(abs_url)
-            
+
     return url_list
 
-def crawlerThread(frontier):
+def crawlerThread(frontier, col_name):
+
+    db = CPPDatabase()
     context = ssl.create_default_context(cafile=certifi.where())
 
     while(frontier):
@@ -48,7 +45,7 @@ def crawlerThread(frontier):
         is_visited[url] = True
 
         bs = BeautifulSoup(html, 'html.parser')
-        createDocument(pages, url, str(bs))
+        db.create_or_update_if_exist(col_name, url, str(bs))
 
         ## target url criteria
         header = bs.find('h1', class_='cpp-h1')
@@ -65,10 +62,7 @@ def crawlerThread(frontier):
 
 if __name__ == '__main__':
 
-    db = connectDataBase()
-    pages = db["pages"]
-
     frontier = []
     frontier.append(URL_SEED)
 
-    target_page_url = crawlerThread(frontier)
+    target_page_url = crawlerThread(frontier, 'pages')
