@@ -1,3 +1,11 @@
+#-------------------------------------------------------------------------
+# AUTHOR: Fidelis Prasetyo
+# FILENAME: crawler.py
+# SPECIFICATION: crawl the CPP's CS dept website until reach target URL
+# FOR: CS 5180- Assignment #3
+# TIME SPENT: 2 days
+#-----------------------------------------------------------*/
+
 import ssl
 import certifi
 
@@ -7,29 +15,25 @@ from urllib.parse import urljoin
 from urllib.error import HTTPError
 from urllib.error import URLError
 
-from CPPDatabase import *
+from pages_db import *
 
 URL_SEED = 'https://www.cpp.edu/sci/computer-science/'
 BASE_URL = 'https://www.cpp.edu/'
 
-is_visited = {}
-
-def extract_urls(html):
+def scrape_urls(html):
     url_list = []
-    for url in html.find_all('a', href=True):
+    for url_tag in html.find_all('a', href=True):
 
         # handle relative url
-        parsed_url = url['href']
+        parsed_url = url_tag.get('href')
         abs_url = urljoin(BASE_URL, parsed_url)
 
-        if url not in is_visited:
-            url_list.append(abs_url)
-
+        url_list.append(abs_url)
     return url_list
 
-def crawlerThread(frontier, col_name):
+def crawlerThread(frontier, pages_db):
 
-    db = CPPDatabase()
+    is_visited = {}
     context = ssl.create_default_context(cafile=certifi.where())
 
     while(frontier):
@@ -45,9 +49,9 @@ def crawlerThread(frontier, col_name):
         is_visited[url] = True
 
         bs = BeautifulSoup(html, 'html.parser')
-        db.create_or_update_if_exist(col_name, url, str(bs))
+        pages_db.create_or_update_if_exist(url, str(bs))
 
-        ## target url criteria
+        # target url criteria
         header = bs.find('h1', class_='cpp-h1')
         if header is not None:
             if header.text == 'Permanent Faculty':
@@ -55,14 +59,17 @@ def crawlerThread(frontier, col_name):
                 frontier.clear()
                 print("Target URL found!! -- " + flag)
         else:
-            frontier.extend(extract_urls(bs))
+            url_list = scrape_urls(bs)
+            for url_found in url_list:
+                if is_visited.get(url_found) is None:
+                    frontier.append(url_found)
 
     return flag
-
 
 if __name__ == '__main__':
 
     frontier = []
     frontier.append(URL_SEED)
+    db = PagesDatabase()
 
-    target_page_url = crawlerThread(frontier, 'pages')
+    target_page_url = crawlerThread(frontier, db)
