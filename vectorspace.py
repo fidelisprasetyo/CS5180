@@ -86,7 +86,7 @@ for q in queries:
     q_nonzero = vectorizer.inverse_transform(q_vector)[0]
     scores = {}
 
-    for i in range(0,4):
+    for i in range(0,len(documents)):
         scores[i] = 0.0
         for term in q_nonzero:
             term_data = termsDB.find_one({"term": term})
